@@ -1,1084 +1,170 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <title>하루 감정 기록장</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <!-- Chart.js (감정 선 그래프용) -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mood Diary</title>
   <style>
-    * { box-sizing: border-box; }
-
     body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      margin: 0;
-      padding: 16px;
-      background: #e6f7f2; /* 밝은 연초록 계열 배경 */
-      color: #1e3a32;
-    }
-
-    .container {
-      max-width: 480px;
-      margin: 0 auto;
-      background: #ffffff;
-      border-radius: 18px;
-      padding: 16px 18px 24px;
-      box-shadow: 0 10px 24px rgba(0,0,0,0.06);
-      border: 1px solid #c9e7db;
-    }
-
-    .top-bar {
-      display: flex;
-      justify-content: flex-end;
-      align-items: center;
-      margin-bottom: 6px;
-    }
-
-    .menu-btn {
-      border: none;
-      background: #d9efe6;
-      border-radius: 999px;
-      padding: 6px 10px;
-      font-size: 16px;
-      cursor: pointer;
-      color: #204036;
-    }
-
-    .menu-panel {
-      display: none;
-      margin-bottom: 8px;
-      background: #f4fbf7;
-      border-radius: 12px;
-      border: 1px solid #cfe4da;
-      padding: 6px;
-    }
-
-    .menu-item {
-      width: 100%;
-      border: none;
-      background: transparent;
-      padding: 6px 8px;
-      text-align: left;
-      font-size: 13px;
-      border-radius: 8px;
-      cursor: pointer;
-      color: #204036;
-    }
-
-    .menu-item:hover {
-      background: #e6f4ee;
-    }
-
-    h1 {
-      font-size: 20px;
-      margin: 0 0 4px;
-      color: #204036;
-    }
-
-    .subtitle {
-      font-size: 12px;
-      color: #56756a;
-      margin-bottom: 12px;
-    }
-
-    .today {
-      font-size: 14px;
-      margin-bottom: 12px;
-      color: #3a5c50;
-    }
-
-    /* 감정 버튼 */
-    .mood-options {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-bottom: 8px;
-    }
-
-    .mood-button {
-      flex: 1 1 calc(33.33% - 8px);
-      border: 1px solid #cfe4da;
-      border-radius: 14px;
-      padding: 10px 0;
-      font-size: 14px;
-      cursor: pointer;
-      background: #f4fbf7;
+      background: #EBFAEC; /* 밝은 연초록 */
+      font-family: Arial, sans-serif;
       text-align: center;
-      color: #204036;
-      transition: background 0.15s, border-color 0.15s, transform 0.08s;
+      padding: 20px;
     }
-
-    .mood-button:hover { background: #e6f4ee; }
-
-    .mood-button.active {
-      background: #3a7f6a;
-      color: #ffffff;
-      border-color: #2e6654;
-      transform: translateY(1px);
-    }
-
-    /* 시간/메모/사진 */
-    input[type="time"] {
-      width: 100%;
-      padding: 8px;
-      margin-bottom: 8px;
-      border-radius: 10px;
-      border: 1px solid #c9e7db;
-      font-size: 14px;
-      background: #f7fbf9;
-      color: #204036;
-    }
-
-    textarea {
-      width: 100%;
-      min-height: 70px;
-      resize: vertical;
-      padding: 8px;
-      border-radius: 10px;
-      border: 1px solid #c9e7db;
-      font-size: 13px;
-      margin-bottom: 8px;
-      background: #f7fbf9;
-      color: #204036;
-    }
-
-    .photo-input-wrapper {
-      margin-bottom: 8px;
-      font-size: 12px;
-      color: #56756a;
-    }
-
-    #photoInput {
-      width: 100%;
-      font-size: 12px;
-      margin-top: 4px;
-    }
-
-    .photo-preview {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-bottom: 8px;
-    }
-
-    .photo-preview img {
-      width: 54px;
-      height: 54px;
-      object-fit: cover;
-      border-radius: 8px;
-      border: 1px solid #cfe4da;
-    }
-
-    /* 버튼, 상태 */
-    .btn {
-      width: 100%;
-      border: none;
-      border-radius: 999px;
-      padding: 10px 12px;
-      font-size: 14px;
-      cursor: pointer;
-      margin-bottom: 8px;
-    }
-
-    .btn-primary {
-      background: #3a7f6a;
-      color: #fff;
-    }
-
-    .btn-primary:active {
-      transform: translateY(1px);
-    }
-
-    .btn-secondary {
-      background: #d9efe6;
-      color: #214238;
-    }
-
-    .status {
-      font-size: 12px;
-      color: #1d7a4a;
-      min-height: 16px;
-      margin-bottom: 8px;
-    }
-
-    /* 기록/달력 */
-    .history {
-      display: none;
-      margin-top: 16px;
-      padding-top: 12px;
-      border-top: 1px solid #cfe4da;
-    }
-
-    .history.visible { display: block; }
-
-    .month-nav {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 8px;
-      align-items: center;
-    }
-
-    .month-btn {
-      font-size: 13px;
-      border: none;
-      background: #d9efe6;
-      padding: 4px 8px;
-      border-radius: 999px;
-      cursor: pointer;
-      color: #204036;
-    }
-
-    .month-label, .stats-month-label {
-      font-size: 14px;
-      font-weight: 600;
-      color: #204036;
-    }
-
-    .calendar-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 11px;
+    h1 {
       margin-bottom: 10px;
     }
-
-    .calendar-table th {
-      padding: 4px;
-      color: #56756a;
-      font-weight: 500;
+    #authSection {
+      margin: 20px 0;
     }
-
-    .calendar-table td {
-      height: 44px;
-      text-align: center;
-      padding: 2px;
-      vertical-align: top;
-    }
-
-    .calendar-cell {
+    button {
+      margin: 5px;
+      padding: 12px 18px;
+      border: none;
       border-radius: 8px;
-      padding: 2px;
       cursor: pointer;
-      transition: background 0.12s;
-    }
-
-    .calendar-cell:hover {
-      background: rgba(58,127,106,0.08);
-    }
-
-    .calendar-day-number {
-      font-size: 11px;
-      color: #3a5c50;
-    }
-
-    .mood-dot { font-size: 16px; }
-
-    .summary {
-      font-size: 13px;
-      margin-bottom: 4px;
-      color: #2e4f43;
-    }
-
-    .history-list {
-      max-height: 260px;
-      overflow-y: auto;
-      background: #f4fbf7;
-      border-radius: 10px;
-      padding: 8px;
-      font-size: 13px;
-      margin-bottom: 8px;
-      border: 1px solid #cfe4da;
-    }
-
-    .history-item {
-      border-bottom: 1px solid #e1f0e8;
-      padding: 6px 4px;
-    }
-
-    .history-item:last-child { border-bottom: none; }
-
-    .history-time {
-      font-size: 12px;
-      font-weight: 600;
-      color: #305648;
-      margin-bottom: 2px;
-    }
-
-    .history-photos {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 4px;
-      margin-top: 4px;
-    }
-
-    .history-photo-img {
-      width: 44px;
-      height: 44px;
-      border-radius: 6px;
-      object-fit: cover;
-      border: 1px solid #cfe4da;
-    }
-
-    .empty {
-      color: #7a968a;
-      font-size: 13px;
-    }
-
-    /* 내보내기 / 불러오기 영역 */
-    .export-area,
-    .import-area {
-      margin-top: 16px;
-      padding-top: 12px;
-      border-top: 1px solid #cfe4da;
-      display: none;
-    }
-
-    .export-description,
-    .import-description {
-      font-size: 12px;
-      color: #56756a;
-      margin-bottom: 4px;
-    }
-
-    #exportText, #importText {
-      width: 100%;
-      min-height: 140px;
-      font-size: 11px;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-        "Liberation Mono", "Courier New", monospace;
-      border-radius: 8px;
-      border: 1px solid #c9e7db;
-      padding: 8px;
-      background: #f7fbf9;
-      color: #204036;
-    }
-
-    #importFile {
-      width: 100%;
-      margin: 6px 0 4px;
-      font-size: 12px;
-    }
-
-    #importStatus {
-      font-size: 12px;
-      min-height: 16px;
-    }
-
-    /* 통계 섹션 */
-    .stats {
-      display: none;
-      margin-top: 16px;
-      padding-top: 12px;
-      border-top: 1px solid #cfe4da;
-    }
-
-    .stats-title {
+      background: #A7ECA4;
       font-size: 16px;
-      margin: 0 0 4px;
-      color: #204036;
     }
-
-    .stats-info {
-      font-size: 12px;
-      color: #56756a;
-      margin-bottom: 8px;
+    button:hover {
+      background: #8BD586;
     }
-
-    .stats-legend {
-      font-size: 11px;
-      color: #56756a;
-      margin-top: 4px;
+    .emotion-buttons button {
+      display: inline-block;
+      font-size: 20px;
+    }
+    #log {
+      margin-top: 30px;
+      background: #fff;
+      padding: 15px;
+      border-radius: 8px;
+      max-width: 400px;
+      margin-left: auto;
+      margin-right: auto;
     }
   </style>
 </head>
+
 <body>
-<div class="container">
-  <div class="top-bar">
-    <button class="menu-btn" id="menuBtn">☰</button>
+  <h1>감정 일기</h1>
+
+  <div id="authSection">
+    <button id="loginButton">Google 로그인</button>
+    <button id="logoutButton" style="display:none;">로그아웃</button>
   </div>
 
-  <div class="menu-panel" id="menuPanel">
-    <button class="menu-item" id="menuStatsBtn">📊 감정 통계 보기</button>
-    <button class="menu-item" id="menuMainBtn">📝 기록 화면으로 돌아가기</button>
+  <div class="emotion-buttons" id="emotionSection" style="display:none;">
+    <p>지금 기분은?</p>
+    <button data-emotion="happy">😊 행복</button>
+    <button data-emotion="sad">😢 슬픔</button>
+    <button data-emotion="angry">😡 화남</button>
+    <button data-emotion="anxious">😰 불안</button>
+    <button data-emotion="tired">🥱 피곤</button>
+    <button data-emotion="ok">🙂 그냥저냥</button>
+    <br><br>
+    <textarea id="memo" placeholder="메모 입력" style="width:80%; height:70px;"></textarea>
+    <br>
+    <button id="saveButton">기록 저장</button>
   </div>
 
-  <h1>하루 감정 기록장</h1>
-  <div class="subtitle">하루 동안 여러 번 바뀌는 감정을, 편하게 기록해 두는 곳이에요.</div>
-  <div class="today" id="todayText"></div>
-
-  <div class="mood-options" id="moodOptions">
-    <div class="mood-button" data-mood="happy">😄 행복</div>
-    <div class="mood-button" data-mood="calm">😌 편안</div>
-    <div class="mood-button" data-mood="okay">🙂 무난</div>
-    <div class="mood-button" data-mood="anxious">😟 불안</div>
-    <div class="mood-button" data-mood="sad">😢 슬픔</div>
-    <div class="mood-button" data-mood="angry">😡 화남</div>
+  <div id="log" style="display:none;">
+    <h3>오늘 기록</h3>
+    <ul id="entriesList"></ul>
   </div>
 
-  <input type="time" id="timeInput" />
-  <textarea id="note" placeholder="왜 이런 기분이 되었는지, 간단히 적어도 좋고 비워도 괜찮아요."></textarea>
+  <!-- Firebase SDK -->
+  <script type="module">
+    // Firebase SDKs
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, query, where, getDocs } 
+      from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
+      from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
-  <div class="photo-input-wrapper">
-    사진을 함께 남기고 싶다면 선택해 주세요. (여러 장 가능)
-    <input type="file" id="photoInput" accept="image/*" multiple capture="environment" />
-  </div>
-  <div class="photo-preview" id="photoPreview"></div>
+    // 🔹 Firebase 설정
+    const firebaseConfig = {
+      apiKey: "AIzaSyAanW1qTl0A5Xmnpx9y4sQlkky74Ef_XLA",
+      authDomain: "mood-diary-deb15.firebaseapp.com",
+      projectId: "mood-diary-deb15",
+      storageBucket: "mood-diary-deb15.firebasestorage.app",
+      messagingSenderId: "55138274698",
+      appId: "1:55138274698:web:c6261e321870248e3d8c73"
+    };
 
-  <button class="btn btn-primary" id="saveBtn">기록 추가</button>
-  <div class="status" id="statusText"></div>
+    // 초기화
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
 
-  <button class="btn btn-secondary" id="toggleHistoryBtn">기록 보기 (달력)</button>
+    const loginButton = document.getElementById("loginButton");
+    const logoutButton = document.getElementById("logoutButton");
+    const emotionSection = document.getElementById("emotionSection");
+    const saveButton = document.getElementById("saveButton");
+    const entriesList = document.getElementById("entriesList");
+    const logBox = document.getElementById("log");
+    const memo = document.getElementById("memo");
 
-  <div class="history" id="historySection">
-    <div class="month-nav">
-      <button class="month-btn" id="prevMonthBtn">◀</button>
-      <div class="month-label" id="monthLabel"></div>
-      <button class="month-btn" id="nextMonthBtn">▶</button>
-    </div>
-    <table class="calendar-table" id="calendar"></table>
-    <div class="summary" id="summaryText"></div>
-    <div class="history-list" id="historyList"></div>
-    <button class="btn btn-secondary" id="hideHistoryBtn">달력 닫기</button>
-  </div>
+    let selectedEmotion = null;
 
-  <button class="btn btn-secondary" id="exportBtn">데이터 내보내기</button>
-  <div class="export-area" id="exportArea">
-    <div class="export-description">
-      아래 내용을 길게 눌러 복사해서, 메모앱·노션·PC 등 원하는 곳에 붙여넣을 수 있어요. (JSON 형식, 사진 포함)
-    </div>
-    <textarea id="exportText" readonly></textarea>
-  </div>
-
-  <button class="btn btn-secondary" id="importBtn">데이터 불러오기</button>
-  <div class="import-area" id="importArea">
-    <div class="import-description">
-      예전에 내보낸 JSON을 붙여넣거나 파일로 선택해서 불러올 수 있어요.<br />
-      기존 기록과 합쳐지고, 같은 시각(datetime)의 기록은 하나로 정리돼요.
-    </div>
-    <textarea id="importText" placeholder="여기에 JSON 붙여넣기"></textarea>
-    <input type="file" id="importFile" accept=".json" />
-    <button class="btn btn-primary" id="applyImportBtn">불러오기 실행</button>
-    <div id="importStatus"></div>
-  </div>
-
-  <div class="stats" id="statsSection">
-    <h2 class="stats-title">감정 통계</h2>
-    <div class="stats-info">
-      선택한 달의 날짜별 평균 감정 점수를 선 그래프로 보여줘요.
-    </div>
-    <div class="month-nav">
-      <button class="month-btn" id="statsPrevMonthBtn">◀</button>
-      <div class="stats-month-label" id="statsMonthLabel"></div>
-      <button class="month-btn" id="statsNextMonthBtn">▶</button>
-    </div>
-    <canvas id="statsChart" height="200"></canvas>
-    <div class="stats-legend">
-      행복=+3, 편안=+2, 무난=+1, 불안=-1, 슬픔=-2, 화남=-3 으로 계산해 평균을 낸 값이에요.
-    </div>
-  </div>
-</div>
-
-<script>
-  const STORAGE_KEY = "moodEntries_v2";
-
-  /* v1 → v2 변환 (예전 구조 대비) */
-  function loadOldEntriesIfNeeded() {
-    const old = localStorage.getItem("moodEntries_v1");
-    if (!old) return;
-    try {
-      const oldArr = JSON.parse(old);
-      const newArr = oldArr.map(e => ({
-        datetime: (e.date || "2000-01-01") + "T12:00",
-        mood: e.mood || "okay",
-        note: e.note || ""
-      }));
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(newArr));
-      localStorage.removeItem("moodEntries_v1");
-    } catch {}
-  }
-
-  function loadEntries() {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    try {
-      const arr = JSON.parse(raw);
-      return Array.isArray(arr) ? arr : [];
-    } catch {
-      return [];
-    }
-  }
-
-  function saveEntries(arr) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
-  }
-
-  function getToday() {
-    const now = new Date();
-    return new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  }
-
-  function getTodayString() {
-    const t = getToday();
-    const y = t.getFullYear();
-    const m = String(t.getMonth() + 1).padStart(2, "0");
-    const d = String(t.getDate()).padStart(2, "0");
-    return `${y}-${m}-${d}`;
-  }
-
-  function getDateString(y, m, d) {
-    return `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-  }
-
-  function formatDateDisplay(d) {
-    return `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일`;
-  }
-
-  function moodEmoji(m) {
-    return {
-      happy: "😄",
-      calm: "😌",
-      okay: "🙂",
-      anxious: "😟",
-      sad: "😢",
-      angry: "😡"
-    }[m] || "";
-  }
-
-  function setActiveMood(mood) {
-    document.querySelectorAll(".mood-button").forEach(btn => {
-      btn.classList.toggle("active", btn.dataset.mood === mood);
-    });
-  }
-
-  function escapeHtml(str) {
-    return str
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
-  }
-
-  function setStatus(msg, isError = false) {
-    const el = document.getElementById("statusText");
-    el.style.color = isError ? "#b03a3a" : "#1d7a4a";
-    el.textContent = msg || "";
-  }
-
-  /* IndexedDB: 사진 저장용 */
-  let db = null;
-
-  function openDB() {
-    return new Promise((resolve, reject) => {
-      if (db) return resolve(db);
-      const req = indexedDB.open("moodDiaryDB_v1", 1);
-
-      req.onupgradeneeded = (event) => {
-        const _db = event.target.result;
-        if (!_db.objectStoreNames.contains("photos")) {
-          const store = _db.createObjectStore("photos", { keyPath: "id", autoIncrement: true });
-          store.createIndex("byDatetime", "datetime", false);
-        }
-      };
-
-      req.onsuccess = (event) => {
-        db = event.target.result;
-        resolve(db);
-      };
-      req.onerror = (event) => {
-        reject(event.target.error);
-      };
-    });
-  }
-
-  async function savePhotosForDatetime(datetime, fileListOrBlobs) {
-    if (!fileListOrBlobs || fileListOrBlobs.length === 0) return;
-    const _db = await openDB();
-    return new Promise((resolve, reject) => {
-      const tx = _db.transaction("photos", "readwrite");
-      const store = tx.objectStore("photos");
-      Array.from(fileListOrBlobs).forEach(fileOrBlob => {
-        store.add({ datetime, blob: fileOrBlob });
-      });
-      tx.oncomplete = () => resolve();
-      tx.onerror = (e) => reject(e.target.error);
-    });
-  }
-
-  async function getPhotosForDatetime(datetime) {
-    const _db = await openDB();
-    return new Promise((resolve, reject) => {
-      const tx = _db.transaction("photos", "readonly");
-      const store = tx.objectStore("photos");
-      const index = store.index("byDatetime");
-      const req = index.getAll(datetime);
-      req.onsuccess = () => {
-        resolve(req.result || []);
-      };
-      req.onerror = (e) => reject(e.target.error);
-    });
-  }
-
-  function blobToDataURL(blob) {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = (e) => reject(e);
-      reader.readAsDataURL(blob);
-    });
-  }
-
-  function dataURLToBlob(dataUrl) {
-    const parts = dataUrl.split(",");
-    const meta = parts[0];
-    const base64 = parts[1];
-    const mimeMatch = meta.match(/data:(.*?);base64/);
-    const mime = mimeMatch ? mimeMatch[1] : "application/octet-stream";
-    const binary = atob(base64);
-    const len = binary.length;
-    const u8 = new Uint8Array(len);
-    for (let i = 0; i < len; i++) {
-      u8[i] = binary.charCodeAt(i);
-    }
-    return new Blob([u8], { type: mime });
-  }
-
-  /* 내보내기 / 불러오기 */
-  function mergeEntries(existing, incoming) {
-    const map = {};
-    existing.forEach(e => {
-      if (!e || !e.datetime) return;
-      map[e.datetime] = {
-        datetime: e.datetime,
-        mood: e.mood || "okay",
-        note: e.note || ""
-      };
-    });
-    incoming.forEach(e => {
-      if (!e || !e.datetime) return;
-      map[e.datetime] = {
-        datetime: e.datetime,
-        mood: e.mood || (map[e.datetime]?.mood || "okay"),
-        note: (e.note !== undefined ? e.note : (map[e.datetime]?.note || ""))
-      };
-    });
-    return Object.values(map).sort((a, b) => a.datetime.localeCompare(b.datetime));
-  }
-
-  async function exportData() {
-    const entries = loadEntries();
-    const exportArea = document.getElementById("exportArea");
-    const exportText = document.getElementById("exportText");
-
-    if (entries.length === 0) {
-      exportText.value = "// 아직 저장된 기록이 없습니다.";
-      exportArea.style.display = "block";
-      return;
-    }
-
-    const sorted = [...entries].sort((a, b) => a.datetime.localeCompare(b.datetime));
-    const result = [];
-
-    for (const e of sorted) {
-      let photosData = [];
-      try {
-        const photoRecords = await getPhotosForDatetime(e.datetime);
-        for (const rec of photoRecords) {
-          if (rec.blob) {
-            const dataUrl = await blobToDataURL(rec.blob);
-            photosData.push(dataUrl);
-          }
-        }
-      } catch {
-        // 사진 로딩에 실패하면 사진은 그냥 건너뜀
-      }
-      result.push({
-        datetime: e.datetime,
-        mood: e.mood,
-        note: e.note,
-        photos: photosData
-      });
-    }
-
-    exportText.value = JSON.stringify(result, null, 2);
-    exportArea.style.display = "block";
-  }
-
-  async function applyImportText(jsonText) {
-    const statusEl = document.getElementById("importStatus");
-    try {
-      const incoming = JSON.parse(jsonText);
-      if (!Array.isArray(incoming)) {
-        throw new Error("not-array");
-      }
-
-      const existing = loadEntries();
-      const merged = mergeEntries(existing, incoming);
-      saveEntries(merged);
-
-      // 사진 데이터 처리
-      for (const e of incoming) {
-        if (!e || !e.datetime || !Array.isArray(e.photos)) continue;
-        const blobs = e.photos.map(dataURLToBlob);
-        const resolvedBlobs = await Promise.all(blobs);
-        await savePhotosForDatetime(e.datetime, resolvedBlobs);
-      }
-
-      statusEl.style.color = "#1d7a4a";
-      statusEl.textContent = "불러오기 완료! 기록이 합쳐졌어요.";
-      renderCalendar(currentMonth);
-      return true;
-    } catch (err) {
-      statusEl.style.color = "#b03a3a";
-      statusEl.textContent = "JSON 형식이 아니거나 알 수 없는 오류가 발생했어요.";
-      return false;
-    }
-  }
-
-  /* 달력 / 통계 */
-  let selectedMood = null;
-  let currentMonth = new Date();
-  let statsMonth = new Date();
-  let statsChart = null;
-  let selectedPhotoFiles = [];
-
-  const moodScore = {
-    happy: 3,
-    calm: 2,
-    okay: 1,
-    anxious: -1,
-    sad: -2,
-    angry: -3
-  };
-
-  function renderTodayText() {
-    document.getElementById("todayText").textContent =
-      "오늘: " + formatDateDisplay(getToday());
-  }
-
-  function renderCalendar(monthDate) {
-    const entries = loadEntries();
-    const y = monthDate.getFullYear();
-    const m = monthDate.getMonth() + 1;
-    document.getElementById("monthLabel").textContent = `${y}년 ${m}월`;
-
-    const firstDay = new Date(y, m - 1, 1);
-    const startWeek = firstDay.getDay();
-    const lastDay = new Date(y, m, 0).getDate();
-
-    const table = document.getElementById("calendar");
-    table.innerHTML = "";
-
-    let thead = "<thead><tr>";
-    ["일","월","화","수","목","금","토"].forEach(w => thead += `<th>${w}</th>`);
-    thead += "</tr></thead>";
-    table.insertAdjacentHTML("beforeend", thead);
-
-    let tbodyHTML = "<tbody><tr>";
-    for (let i = 0; i < startWeek; i++) tbodyHTML += "<td></td>";
-
-    for (let d = 1; d <= lastDay; d++) {
-      if ((startWeek + d - 1) % 7 === 0 && d !== 1) tbodyHTML += "</tr><tr>";
-      const ds = getDateString(y, m, d);
-      const dayEntries = entries.filter(e => e.datetime.startsWith(ds));
-      let repEmoji = "";
-      if (dayEntries.length > 0) {
-        const counter = { happy:0, calm:0, okay:0, anxious:0, sad:0, angry:0 };
-        dayEntries.forEach(e => {
-          if (counter[e.mood] !== undefined) counter[e.mood]++;
-        });
-        const sorted = Object.entries(counter).sort((a, b) => b[1] - a[1]);
-        if (sorted[0][1] > 0) repEmoji = moodEmoji(sorted[0][0]);
-      }
-      tbodyHTML += `
-        <td class="calendar-cell" onclick="showDayDetails('${ds}')">
-          <div class="calendar-day-number">${d}</div>
-          <div class="mood-dot">${repEmoji}</div>
-        </td>
-      `;
-    }
-    tbodyHTML += "</tr></tbody>";
-    table.insertAdjacentHTML("beforeend", tbodyHTML);
-
-    document.getElementById("summaryText").textContent = "";
-    document.getElementById("historyList").innerHTML = "";
-  }
-
-  async function showDayDetails(dateStr) {
-    const allEntries = loadEntries();
-    const entries = allEntries
-      .filter(e => e.datetime.startsWith(dateStr))
-      .sort((a, b) => a.datetime.localeCompare(b.datetime));
-
-    const list = document.getElementById("historyList");
-    const summary = document.getElementById("summaryText");
-
-    if (entries.length === 0) {
-      list.innerHTML = '<div class="empty">이 날에는 기록이 없어요.</div>';
-      summary.textContent = "";
-      return;
-    }
-
-    list.innerHTML = "";
-    for (const e of entries) {
-      const timePart = e.datetime.split("T")[1] || "";
-      const hm = timePart.slice(0, 5);
-      const text = (e.note && e.note.length > 0) ? e.note : "(메모 없음)";
-
-      let photosHtml = "";
-      try {
-        const photoRecords = await getPhotosForDatetime(e.datetime);
-        if (photoRecords.length > 0) {
-          const urls = [];
-          for (const rec of photoRecords) {
-            if (rec.blob) {
-              const url = URL.createObjectURL(rec.blob);
-              urls.push(url);
-            }
-          }
-          if (urls.length > 0) {
-            photosHtml =
-              `<div class="history-photos">` +
-              urls.map(u => `<img src="${u}" class="history-photo-img">`).join("") +
-              `</div>`;
-          }
-        }
-      } catch {
-        // 사진 로딩 실패 시 사진 부분은 생략
-      }
-
-      const itemHtml = `
-        <div class="history-item">
-          <div class="history-time">${hm}</div>
-          <div>${moodEmoji(e.mood)} ${escapeHtml(text)}</div>
-          ${photosHtml}
-        </div>
-      `;
-      list.insertAdjacentHTML("beforeend", itemHtml);
-    }
-
-    summary.textContent = `${formatDateDisplay(new Date(dateStr))} · 기록 ${entries.length}개`;
-  }
-
-  function renderStats(monthDate) {
-    const entries = loadEntries();
-    const y = monthDate.getFullYear();
-    const m = monthDate.getMonth() + 1;
-    document.getElementById("statsMonthLabel").textContent = `${y}년 ${m}월`;
-
-    const daysInMonth = new Date(y, m, 0).getDate();
-    const labels = [];
-    const data = [];
-
-    for (let d = 1; d <= daysInMonth; d++) {
-      const ds = getDateString(y, m, d);
-      const dayEntries = entries.filter(e => e.datetime.startsWith(ds));
-      labels.push(String(d));
-      if (dayEntries.length === 0) {
-        data.push(null);
-      } else {
-        let sum = 0;
-        let count = 0;
-        dayEntries.forEach(e => {
-          const s = moodScore[e.mood];
-          if (s !== undefined) {
-            sum += s;
-            count++;
-          }
-        });
-        data.push(count ? (sum / count) : null);
-      }
-    }
-
-    const ctx = document.getElementById("statsChart").getContext("2d");
-    if (statsChart) {
-      statsChart.data.labels = labels;
-      statsChart.data.datasets[0].data = data;
-      statsChart.update();
-    } else {
-      statsChart = new Chart(ctx, {
-        type: "line",
-        data: {
-          labels,
-          datasets: [
-            {
-              label: "감정 점수",
-              data,
-              tension: 0.3,
-              pointRadius: 2,
-              borderWidth: 2
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          scales: {
-            y: {
-              suggestedMin: -3,
-              suggestedMax: 3,
-              ticks: {
-                stepSize: 1
-              }
-            }
-          }
-        }
-      });
-    }
-  }
-
-  function renderPhotoPreview(files) {
-    const preview = document.getElementById("photoPreview");
-    preview.innerHTML = "";
-    if (!files || files.length === 0) return;
-    Array.from(files).forEach(file => {
-      const url = URL.createObjectURL(file);
-      const img = document.createElement("img");
-      img.src = url;
-      preview.appendChild(img);
-    });
-  }
-
-  document.addEventListener("DOMContentLoaded", () => {
-    loadOldEntriesIfNeeded();
-    renderTodayText();
-
-    const now = new Date();
-    document.getElementById("timeInput").value =
-      String(now.getHours()).padStart(2, "0") + ":" +
-      String(now.getMinutes()).padStart(2, "0");
-
-    document.querySelectorAll(".mood-button").forEach(btn => {
+    document.querySelectorAll(".emotion-buttons button[data-emotion]").forEach(btn => {
       btn.addEventListener("click", () => {
-        selectedMood = btn.dataset.mood;
-        setActiveMood(selectedMood);
-        setStatus("");
+        selectedEmotion = btn.dataset.emotion;
       });
     });
 
-    document.getElementById("photoInput").addEventListener("change", (e) => {
-      selectedPhotoFiles = Array.from(e.target.files || []);
-      renderPhotoPreview(selectedPhotoFiles);
+    loginButton.addEventListener("click", () => {
+      signInWithPopup(auth, provider);
     });
 
-    document.getElementById("saveBtn").addEventListener("click", async () => {
-      if (!selectedMood) {
-        setStatus("감정을 하나 선택해 주세요.", true);
-        return;
-      }
-      const timeVal = document.getElementById("timeInput").value || "12:00";
-      const note = document.getElementById("note").value.trim();
-      const todayStr = getTodayString();
-      const datetime = todayStr + "T" + timeVal;
-
-      const entries = loadEntries();
-      entries.push({ datetime, mood: selectedMood, note });
-      entries.sort((a, b) => a.datetime.localeCompare(b.datetime));
-      saveEntries(entries);
-
-      try {
-        if (selectedPhotoFiles && selectedPhotoFiles.length > 0) {
-          await savePhotosForDatetime(datetime, selectedPhotoFiles);
-        }
-      } catch {
-        // 사진 저장 실패해도 텍스트 기록은 남도록
-      }
-
-      setStatus("기록이 추가됐어요.");
-      document.getElementById("note").value = "";
-      selectedPhotoFiles = [];
-      document.getElementById("photoInput").value = "";
-      renderPhotoPreview([]);
+    logoutButton.addEventListener("click", () => {
+      signOut(auth);
     });
 
-    document.getElementById("toggleHistoryBtn").addEventListener("click", () => {
-      const h = document.getElementById("historySection");
-      if (h.classList.contains("visible")) {
-        h.classList.remove("visible");
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        loginButton.style.display = "none";
+        logoutButton.style.display = "inline-block";
+        emotionSection.style.display = "block";
+        logBox.style.display = "block";
+        loadEntries(user);
       } else {
-        currentMonth = new Date();
-        renderCalendar(currentMonth);
-        h.classList.add("visible");
+        loginButton.style.display = "inline-block";
+        logoutButton.style.display = "none";
+        emotionSection.style.display = "none";
+        logBox.style.display = "none";
       }
     });
 
-    document.getElementById("hideHistoryBtn").addEventListener("click", () => {
-      document.getElementById("historySection").classList.remove("visible");
+    saveButton.addEventListener("click", async () => {
+      const user = auth.currentUser;
+      if (!user) return alert("로그인이 필요합니다!");
+      if (!selectedEmotion) return alert("감정을 선택해주세요!");
+
+      await addDoc(collection(db, "entries"), {
+        uid: user.uid,
+        emotion: selectedEmotion,
+        memo: memo.value || "",
+        timestamp: new Date()
+      });
+
+      memo.value = "";
+      selectedEmotion = null;
+      alert("저장 완료!");
+      loadEntries(user);
     });
 
-    document.getElementById("prevMonthBtn").addEventListener("click", () => {
-      currentMonth.setMonth(currentMonth.getMonth() - 1);
-      renderCalendar(currentMonth);
-    });
-
-    document.getElementById("nextMonthBtn").addEventListener("click", () => {
-      currentMonth.setMonth(currentMonth.getMonth() + 1);
-      renderCalendar(currentMonth);
-    });
-
-    document.getElementById("exportBtn").addEventListener("click", () => {
-      exportData();
-    });
-
-    document.getElementById("importBtn").addEventListener("click", () => {
-      const area = document.getElementById("importArea");
-      area.style.display = (area.style.display === "none" || area.style.display === "") ? "block" : "none";
-    });
-
-    document.getElementById("applyImportBtn").addEventListener("click", async () => {
-      const text = document.getElementById("importText").value.trim();
-      if (!text) {
-        const statusEl = document.getElementById("importStatus");
-        statusEl.style.color = "#b03a3a";
-        statusEl.textContent = "빈 입력입니다.";
-        return;
-      }
-      await applyImportText(text);
-    });
-
-    document.getElementById("importFile").addEventListener("change", (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = async () => {
-        await applyImportText(reader.result);
-      };
-      reader.readAsText(file);
-    });
-
-    // 메뉴 / 통계
-    const menuBtn = document.getElementById("menuBtn");
-    const menuPanel = document.getElementById("menuPanel");
-    const statsSection = document.getElementById("statsSection");
-
-    menuBtn.addEventListener("click", () => {
-      if (menuPanel.style.display === "block") {
-        menuPanel.style.display = "none";
-      } else {
-        menuPanel.style.display = "block";
-      }
-    });
-
-    document.getElementById("menuStatsBtn").addEventListener("click", () => {
-      menuPanel.style.display = "none";
-      statsSection.style.display = "block";
-      statsMonth = new Date();
-      renderStats(statsMonth);
-    });
-
-    document.getElementById("menuMainBtn").addEventListener("click", () => {
-      menuPanel.style.display = "none";
-      statsSection.style.display = "none";
-    });
-
-    document.getElementById("statsPrevMonthBtn").addEventListener("click", () => {
-      statsMonth.setMonth(statsMonth.getMonth() - 1);
-      renderStats(statsMonth);
-    });
-
-    document.getElementById("statsNextMonthBtn").addEventListener("click", () => {
-      statsMonth.setMonth(statsMonth.getMonth() + 1);
-      renderStats(statsMonth);
-    });
-  });
-</script>
+    async function loadEntries(user) {
+      entriesList.innerHTML = "";
+      const q = query(collection(db, "entries"), where("uid", "==", user.uid));
+      const snapshot = await getDocs(q);
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const li = document.createElement("li");
+        li.textContent = `${data.timestamp.toDate().toLocaleString()} - ${data.emotion} / ${data.memo}`;
+        entriesList.appendChild(li);
+      });
+    }
+  </script>
 </body>
 </html>
