@@ -4,151 +4,176 @@
   <meta charset="UTF-8" />
   <title>하루 감정 기록장</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Chart.js (감정 통계 그래프용) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <style>
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
     body {
       margin: 0;
+      padding: 0;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #e6f7f2;  /* 밝은 연초록 */
-      color: #12362b;
+      background: #e6f7f2; /* 연한 민트 배경 */
+      color: #1e3a32;
+    }
+
+    .page-wrap {
+      min-height: 100vh;
       display: flex;
+      align-items: flex-start;
       justify-content: center;
-      padding: 16px;
+      padding: 24px 8px;
     }
 
-    .app-shell {
+    .container {
       width: 100%;
-      max-width: 640px;
-      background: #f6fff9;
-      border-radius: 18px;
-      box-shadow: 0 10px 24px rgba(0,0,0,0.06);
+      max-width: 520px;
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 18px 18px 24px;
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
       border: 1px solid #c9e7db;
-      padding: 16px 16px 24px;
     }
 
-    .header {
+    .header-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 12px;
+      margin-bottom: 4px;
     }
 
-    .title-area {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .title {
-      font-size: 22px;
-      font-weight: 700;
-      color: #12362b;
+    h1 {
+      font-size: 20px;
+      margin: 0;
+      color: #204036;
     }
 
     .subtitle {
       font-size: 12px;
       color: #56756a;
+      margin-bottom: 10px;
     }
 
-    .menu-btn {
+    .icon-button {
       border: none;
       background: #d9efe6;
       border-radius: 999px;
-      width: 32px;
-      height: 32px;
+      padding: 8px 10px;
+      cursor: pointer;
+      font-size: 16px;
       display: flex;
       align-items: center;
       justify-content: center;
-      cursor: pointer;
-      font-size: 18px;
-      color: #234338;
+      color: #204036;
     }
 
     .menu-panel {
       display: none;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
       padding: 8px 10px;
-      background: #e6f7f2;
+      background: #f1faf6;
       border-radius: 12px;
       font-size: 13px;
+      color: #2a4a3d;
     }
 
     .menu-panel.visible {
       display: block;
     }
 
-    .menu-panel-row {
+    .menu-row {
       display: flex;
-      justify-content: flex-end;
+      justify-content: space-between;
+      align-items: center;
       gap: 8px;
+      margin-bottom: 4px;
     }
 
-    .menu-small-btn {
-      border: none;
-      border-radius: 999px;
-      padding: 6px 10px;
+    .menu-email {
       font-size: 12px;
-      cursor: pointer;
-      background: #3a7f6a;
-      color: #fff;
+      color: #56756a;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
     }
 
-    .section {
-      margin-top: 8px;
-      margin-bottom: 12px;
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: #d9efe6;
+      color: #214238;
     }
 
-    .today-row {
+    .today-line {
       font-size: 13px;
-      color: #345b4b;
+      color: #3a5c50;
       margin-bottom: 8px;
     }
 
+    /* 감정 버튼들 */
     .mood-row {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
     }
 
     .mood-btn {
       flex: 1 1 calc(33.33% - 8px);
       min-width: 90px;
-      padding: 8px 0;
-      border-radius: 14px;
+      border-radius: 999px;
       border: 1px solid #cfe4da;
       background: #f4fbf7;
-      cursor: pointer;
+      padding: 8px 10px;
       font-size: 14px;
+      text-align: center;
+      cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
+      gap: 4px;
+      transition: background 0.15s, border-color 0.15s, transform 0.07s;
       color: #204036;
-      transition: background 0.15s, border-color 0.15s, transform 0.08s;
+    }
+
+    .mood-btn span.emoji {
+      font-size: 18px;
+    }
+
+    .mood-btn:hover {
+      background: #e6f4ee;
     }
 
     .mood-btn.active {
-      background: #3a7f6a;
-      border-color: #2f6a58;
-      color: #fff;
+      background: #2f7c63;
+      color: #ffffff;
+      border-color: #245f4b;
       transform: translateY(1px);
     }
 
-    .time-row {
+    .field-row {
       display: flex;
       align-items: center;
-      gap: 6px;
-      margin-bottom: 8px;
-      font-size: 13px;
-      color: #345b4b;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    label {
+      font-size: 12px;
+      color: #56756a;
+      white-space: nowrap;
     }
 
     input[type="time"] {
-      flex: 0 0 120px;
+      flex: 1;
       padding: 6px 8px;
-      border-radius: 999px;
+      border-radius: 10px;
       border: 1px solid #c9e7db;
       background: #f7fbf9;
       font-size: 13px;
@@ -157,62 +182,52 @@
 
     textarea {
       width: 100%;
-      resize: vertical;
-      min-height: 72px;
+      min-height: 80px;
       padding: 8px;
       border-radius: 10px;
       border: 1px solid #c9e7db;
       background: #f7fbf9;
       font-size: 13px;
-      margin-bottom: 6px;
       color: #204036;
+      resize: vertical;
+      margin-bottom: 4px;
     }
 
     .hint {
       font-size: 11px;
       color: #7a968a;
-      margin-bottom: 4px;
+      margin-bottom: 10px;
     }
 
-    .file-row {
-      font-size: 12px;
-      margin-bottom: 8px;
-      color: #345b4b;
-    }
-
-    input[type="file"] {
-      font-size: 12px;
-    }
-
-    .primary-btn,
-    .secondary-btn {
+    .btn {
       width: 100%;
-      border-radius: 999px;
       border: none;
-      cursor: pointer;
-      padding: 10px 12px;
+      border-radius: 999px;
+      padding: 10px 14px;
       font-size: 14px;
-      margin-top: 6px;
+      cursor: pointer;
+      margin-bottom: 8px;
     }
 
-    .primary-btn {
-      background: #25634f;
-      color: #fff;
+    .btn-primary {
+      background: #2f7c63;
+      color: #ffffff;
     }
 
-    .primary-btn:active {
+    .btn-primary:active {
       transform: translateY(1px);
     }
 
-    .secondary-btn {
+    .btn-secondary {
       background: #d9efe6;
-      color: #234338;
+      color: #214238;
     }
 
     .status {
-      min-height: 16px;
-      margin-top: 4px;
+      min-height: 18px;
       font-size: 12px;
+      margin-top: 4px;
+      margin-bottom: 6px;
       color: #1d7a4a;
     }
 
@@ -220,29 +235,26 @@
       color: #b03a3a;
     }
 
-    .card {
-      margin-top: 14px;
-      padding: 10px;
-      border-radius: 12px;
-      background: #f4fbf7;
-      border: 1px solid #cfe4da;
-    }
-
-    .card-title {
+    .section-title {
       font-size: 14px;
       font-weight: 600;
-      margin-bottom: 4px;
-      color: #234338;
+      margin: 16px 0 8px;
+      color: #214238;
     }
 
-    .today-list {
+    .today-box {
+      margin-top: 8px;
+      padding: 10px;
+      background: #f4fbf7;
+      border-radius: 12px;
+      border: 1px solid #cfe4da;
       font-size: 13px;
       max-height: 220px;
       overflow-y: auto;
     }
 
     .today-item {
-      padding: 4px 0;
+      padding: 6px 4px;
       border-bottom: 1px solid #e1f0e8;
     }
 
@@ -257,289 +269,278 @@
     }
 
     .today-text {
-      font-size: 13px;
       margin-top: 2px;
     }
 
-    .calendar-section {
-      display: none;
-      margin-top: 10px;
+    .empty-text {
+      font-size: 13px;
+      color: #7a968a;
     }
 
-    .calendar-section.visible {
+    /* 달력 */
+    .calendar-wrap {
+      display: none;
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 12px;
+      background: #f4fbf7;
+      border: 1px solid #cfe4da;
+      font-size: 12px;
+    }
+
+    .calendar-wrap.visible {
       display: block;
     }
 
     .month-nav {
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      margin-bottom: 6px;
+      justify-content: space-between;
+      margin-bottom: 4px;
     }
 
     .month-label {
-      font-size: 14px;
       font-weight: 600;
-      color: #234338;
+      color: #204036;
     }
 
-    .month-nav-btn {
+    .month-btn {
       border: none;
       background: #d9efe6;
       border-radius: 999px;
       padding: 4px 8px;
-      font-size: 13px;
       cursor: pointer;
-      color: #234338;
+      font-size: 12px;
+      color: #214238;
     }
 
     table.calendar {
       width: 100%;
       border-collapse: collapse;
-      font-size: 11px;
-      margin-bottom: 6px;
+      margin-top: 4px;
     }
 
-    .calendar th {
+    table.calendar th {
       padding: 4px;
       color: #56756a;
       font-weight: 500;
     }
 
-    .calendar td {
-      height: 44px;
-      padding: 2px;
-      vertical-align: top;
+    table.calendar td {
+      height: 46px;
       text-align: center;
-    }
-
-    .cal-cell {
-      border-radius: 8px;
+      vertical-align: top;
       padding: 2px;
       cursor: pointer;
+    }
+
+    .cal-cell-inner {
+      border-radius: 8px;
+      padding: 2px;
       transition: background 0.12s;
     }
 
-    .cal-cell:hover {
-      background: rgba(58,127,106,0.08);
+    .cal-cell-inner:hover {
+      background: rgba(47, 124, 99, 0.08);
     }
 
-    .cal-day {
+    .day-number {
       font-size: 11px;
       color: #3a5c50;
     }
 
-    .cal-emoji {
+    .day-emoji {
       font-size: 16px;
     }
 
-    .history-list {
+    .history-detail {
+      margin-top: 8px;
       max-height: 220px;
       overflow-y: auto;
-      font-size: 13px;
-      background: #f7fbf9;
       border-radius: 10px;
+      background: #ffffff;
       border: 1px solid #cfe4da;
-      padding: 6px;
-      margin-top: 4px;
+      padding: 6px 6px 4px;
     }
 
     .history-item {
+      padding: 4px 4px;
       border-bottom: 1px solid #e1f0e8;
-      padding: 4px 2px;
+      font-size: 12px;
     }
 
     .history-item:last-child {
       border-bottom: none;
     }
 
-    .history-empty {
-      font-size: 13px;
-      color: #7a968a;
-      padding: 6px 2px;
-    }
-
-    .history-headline {
-      font-size: 13px;
-      margin-top: 4px;
-      margin-bottom: 2px;
-      color: #345b4b;
+    .history-date-line {
+      font-size: 12px;
+      margin-bottom: 4px;
+      color: #305648;
       font-weight: 600;
     }
 
-    .export-area {
+    /* 내보내기/불러오기 */
+    .export-wrap {
       display: none;
-      margin-top: 8px;
-    }
-
-    .export-area.visible {
-      display: block;
-    }
-
-    #exportText {
-      width: 100%;
-      min-height: 140px;
-      font-size: 11px;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      border-radius: 8px;
-      border: 1px solid #c9e7db;
-      padding: 8px;
-      background: #f7fbf9;
-      color: #204036;
-    }
-
-    .chart-container {
-      margin-top: 8px;
-      padding: 8px;
+      margin-top: 10px;
+      padding: 10px;
       border-radius: 12px;
       background: #f4fbf7;
       border: 1px solid #cfe4da;
+      font-size: 12px;
     }
 
-    .chart-title {
-      font-size: 13px;
-      margin-bottom: 4px;
-      color: #234338;
+    .export-wrap.visible {
+      display: block;
     }
 
-    .login-only {
-      text-align: center;
-      padding: 60px 12px 40px;
+    .export-textarea {
+      width: 100%;
+      min-height: 150px;
+      margin-top: 6px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 11px;
+      border-radius: 8px;
+      border: 1px solid #c9e7db;
+      padding: 6px;
+      background: #ffffff;
+      color: #204036;
     }
 
-    .login-title {
-      font-size: 24px;
-      margin-bottom: 12px;
-      color: #12362b;
+    /* 그래프 */
+    .chart-wrap {
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 12px;
+      background: #f4fbf7;
+      border: 1px solid #cfe4da;
+      font-size: 12px;
     }
 
-    .login-btn {
-      border: none;
-      border-radius: 999px;
-      padding: 10px 18px;
-      font-size: 14px;
-      cursor: pointer;
-      background: #3a7f6a;
-      color: #fff;
+    canvas {
+      max-width: 100%;
     }
 
     @media (max-width: 480px) {
-      .app-shell {
-        padding: 12px 10px 18px;
+      .container {
         border-radius: 0;
-        max-width: 100%;
+        box-shadow: none;
+        border-left: none;
+        border-right: none;
       }
     }
   </style>
-  <!-- Chart.js (감정 통계 그래프용) -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-<div class="app-shell">
-  <div id="loginView" class="login-only" style="display:none;">
-    <div class="login-title">감정 일기</div>
-    <p style="font-size:13px; color:#56756a; margin-bottom:18px;">
-      Google 계정으로 로그인하면 PC와 폰에서 같은 기록을 볼 수 있어요.
-    </p>
-    <button id="loginBtn" class="login-btn">Google 로그인</button>
-  </div>
-
-  <div id="appView" style="display:none;">
-    <div class="header">
-      <div class="title-area">
-        <div class="title">감정 일기</div>
-        <div class="subtitle" id="userEmailText"></div>
+<div class="page-wrap">
+  <div class="container">
+    <div class="header-row">
+      <div>
+        <h1>하루 감정 기록장</h1>
+        <div class="subtitle">하루 동안 여러 번 바뀌는 감정을, 편하게 기록해 두는 곳이에요.</div>
       </div>
-      <button id="menuToggle" class="menu-btn" aria-label="메뉴 열기/닫기">☰</button>
+      <button class="icon-button" id="menuToggle" aria-label="메뉴 열기">
+        ☰
+      </button>
     </div>
 
-    <div id="menuPanel" class="menu-panel">
-      <div class="menu-panel-row">
-        <button id="logoutBtn" class="menu-small-btn">로그아웃</button>
+    <div class="menu-panel" id="menuPanel">
+      <div class="menu-row">
+        <span class="badge" id="loginStatus">로그인 필요</span>
+        <button class="icon-button" id="loginBtn">Google 로그인</button>
+        <button class="icon-button" id="logoutBtn" style="display:none;">로그아웃</button>
       </div>
+      <div class="menu-email" id="userEmail"></div>
     </div>
 
-    <!-- 오늘 기록 입력 영역 -->
-    <div class="section">
-      <div class="today-row" id="todayText"></div>
+    <div class="today-line" id="todayText"></div>
 
-      <div class="mood-row" id="moodButtons">
-        <button class="mood-btn" data-mood="happy"><span>😊</span><span>행복</span></button>
-        <button class="mood-btn" data-mood="calm"><span>😌</span><span>편안</span></button>
-        <button class="mood-btn" data-mood="tired"><span>😪</span><span>피곤</span></button>
-        <button class="mood-btn" data-mood="anxious"><span>😟</span><span>불안</span></button>
-        <button class="mood-btn" data-mood="sad"><span>😢</span><span>슬픔</span></button>
-        <button class="mood-btn" data-mood="angry"><span>😡</span><span>화남</span></button>
-        <button class="mood-btn" data-mood="meh"><span>🙂</span><span>그냥저냥</span></button>
-      </div>
-
-      <div class="time-row">
-        <span>시간</span>
-        <input type="time" id="timeInput" />
-      </div>
-
-      <textarea id="noteInput" placeholder="왜 이런 기분이 되었는지, 간단히 적어도 좋고 비워도 괜찮아요."></textarea>
-
-      <div class="file-row">
-        사진을 함께 남기고 싶다면 선택해 주세요. (여러 장 가능, <b>지금 버전은 아직 업로드는 안 해요</b>)
-        <br/>
-        <input type="file" id="photoInput" multiple accept="image/*">
-      </div>
-
-      <button id="saveBtn" class="primary-btn">기록 추가</button>
-      <button id="toggleCalendarBtn" class="secondary-btn">기록 보기 (달력·세부)</button>
-      <button id="exportBtn" class="secondary-btn">데이터 내보내기</button>
-      <button id="importBtn" class="secondary-btn">데이터 불러오기</button>
-
-      <div id="status" class="status"></div>
+    <div class="mood-row" id="moodRow">
+      <button class="mood-btn" data-mood="happy">
+        <span class="emoji">😊</span><span>행복</span>
+      </button>
+      <button class="mood-btn" data-mood="sad">
+        <span class="emoji">😢</span><span>슬픔</span>
+      </button>
+      <button class="mood-btn" data-mood="angry">
+        <span class="emoji">😡</span><span>화남</span>
+      </button>
+      <button class="mood-btn" data-mood="anxious">
+        <span class="emoji">😰</span><span>불안</span>
+      </button>
+      <button class="mood-btn" data-mood="tired">
+        <span class="emoji">🥱</span><span>피곤</span>
+      </button>
+      <button class="mood-btn" data-mood="meh">
+        <span class="emoji">🙂</span><span>그냥저냥</span>
+      </button>
     </div>
 
-    <!-- 오늘 기록 카드 -->
-    <div class="card">
-      <div class="card-title">오늘 기록</div>
-      <div class="hint" id="todayHint"></div>
-      <div id="todayList" class="today-list"></div>
+    <div class="field-row">
+      <label for="timeInput">시간</label>
+      <input type="time" id="timeInput">
     </div>
 
-    <!-- 달력 + 특정 날짜 세부 -->
-    <div id="calendarSection" class="calendar-section">
-      <div class="card">
-        <div class="month-nav">
-          <button id="prevMonthBtn" class="month-nav-btn">◀</button>
-          <div id="monthLabel" class="month-label"></div>
-          <button id="nextMonthBtn" class="month-nav-btn">▶</button>
-        </div>
-        <table class="calendar" id="calendarTable"></table>
+    <textarea id="noteInput" placeholder="왜 이런 기분이 되었는지, 간단히 적어도 좋고 비워도 괜찮아요."></textarea>
 
-        <div class="history-headline" id="selectedDateTitle"></div>
-        <div id="historyList" class="history-list"></div>
+    <div class="hint">
+      ※ 지금은 텍스트만 Firestore에 저장돼요. 사진 저장은 아직 구현되지 않았어요.
+    </div>
+
+    <button class="btn btn-primary" id="saveBtn">기록 추가</button>
+    <div class="status" id="statusText"></div>
+
+    <button class="btn btn-secondary" id="toggleCalendarBtn">기록 보기 (달력·세부)</button>
+    <button class="btn btn-secondary" id="exportBtn">데이터 내보내기</button>
+    <button class="btn btn-secondary" id="importBtn">데이터 불러오기</button>
+
+    <div class="section-title">오늘 기록</div>
+    <div class="today-box" id="todayBox">
+      <div class="empty-text">아직 오늘 기록이 없어요.</div>
+    </div>
+
+    <!-- 달력 + 세부 기록 -->
+    <div class="calendar-wrap" id="calendarWrap">
+      <div class="month-nav">
+        <button class="month-btn" id="prevMonthBtn">◀</button>
+        <div class="month-label" id="monthLabel"></div>
+        <button class="month-btn" id="nextMonthBtn">▶</button>
       </div>
-
-      <div class="chart-container">
-        <div class="chart-title">감정 통계 (선택한 달의 날짜별 평균 감정 점수)</div>
-        <canvas id="moodChart" height="180"></canvas>
+      <table class="calendar" id="calendarTable"></table>
+      <div class="history-detail" id="historyDetail">
+        <div class="history-date-line">날짜를 누르면 세부 기록이 보여요.</div>
       </div>
     </div>
 
-    <!-- JSON 내보내기/불러오기 영역 -->
-    <div id="exportArea" class="export-area">
-      <div class="hint">
-        아래 내용을 길게 눌러 복사해서, 메모앱·노션·PC 등에 붙여넣을 수 있어요. (JSON 형식)
-      </div>
-      <textarea id="exportText" readonly></textarea>
+    <!-- 데이터 내보내기/불러오기 영역 -->
+    <div class="export-wrap" id="exportWrap">
+      <div>아래 내용을 길게 눌러 복사해서 메모앱·노션·PC 등에 붙여 넣을 수 있어요. (JSON 형식)</div>
+      <textarea class="export-textarea" id="exportText" readonly></textarea>
     </div>
+
+    <!-- 감정 통계 그래프 -->
+    <div class="section-title">감정 통계</div>
+    <div class="chart-wrap">
+      <div style="font-size:12px; margin-bottom:4px;">
+        선택된 달의 날짜별 평균 감정 점수를 선 그래프로 보여줘요.
+        (행복 5 · 그냥저냥 3 · 피곤/불안 2 · 슬픔/화남 1)
+      </div>
+      <canvas id="moodChart" height="160"></canvas>
+    </div>
+
   </div>
 </div>
 
 <script type="module">
-  // --------- Firebase 초기화 ---------
+  // ----- Firebase 초기화 (주인님 프로젝트 값 사용) -----
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
   import {
     getAuth,
     GoogleAuthProvider,
     signInWithPopup,
-    signOut,
-    onAuthStateChanged
+    onAuthStateChanged,
+    signOut
   } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
   import {
     getFirestore,
@@ -548,11 +549,10 @@
     getDocs,
     query,
     where,
-    orderBy,
-    serverTimestamp
+    orderBy
   } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
-  // 🔒 주인님 Firebase 설정 (이미 콘솔에서 받은 값)
+  // 주인님이 콘솔에서 받은 설정값 (이미 공개용이라 클라이언트에 써도 됩니다)
   const firebaseConfig = {
     apiKey: "AIzaSyAanW1qTl0A5Xmnpx9y4sQlkky74Ef_XLA",
     authDomain: "mood-diary-deb15.firebaseapp.com",
@@ -564,134 +564,401 @@
 
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
-  const db = getFirestore(app);
   const provider = new GoogleAuthProvider();
+  const db = getFirestore(app);
 
-  // --------- 상태 변수 ---------
-  let currentUser = null;
-  let selectedMood = null;
-  let currentMonthDate = new Date(); // 달력에서 보고 있는 월
-  let monthEntriesCache = [];        // 현재 로그인한 유저의 모든 기록 (메모리 캐시)
-  let moodChart = null;
-
-  // --------- DOM 참조 ---------
-  const loginView = document.getElementById("loginView");
-  const appView = document.getElementById("appView");
-  const loginBtn = document.getElementById("loginBtn");
-  const logoutBtn = document.getElementById("logoutBtn");
+  // ----- DOM 참조 -----
   const menuToggle = document.getElementById("menuToggle");
   const menuPanel = document.getElementById("menuPanel");
-  const userEmailText = document.getElementById("userEmailText");
+  const loginStatus = document.getElementById("loginStatus");
+  const loginBtn = document.getElementById("loginBtn");
+  const logoutBtn = document.getElementById("logoutBtn");
+  const userEmailEl = document.getElementById("userEmail");
 
   const todayText = document.getElementById("todayText");
-  const todayHint = document.getElementById("todayHint");
-  const moodButtonsContainer = document.getElementById("moodButtons");
+  const moodButtons = Array.from(document.querySelectorAll(".mood-btn"));
   const timeInput = document.getElementById("timeInput");
   const noteInput = document.getElementById("noteInput");
-  const photoInput = document.getElementById("photoInput");
-
   const saveBtn = document.getElementById("saveBtn");
+  const statusText = document.getElementById("statusText");
+
+  const todayBox = document.getElementById("todayBox");
+
   const toggleCalendarBtn = document.getElementById("toggleCalendarBtn");
-  const exportBtn = document.getElementById("exportBtn");
-  const importBtn = document.getElementById("importBtn");
-  const statusEl = document.getElementById("status");
-
-  const todayList = document.getElementById("todayList");
-
-  const calendarSection = document.getElementById("calendarSection");
-  const monthLabel = document.getElementById("monthLabel");
+  const calendarWrap = document.getElementById("calendarWrap");
   const calendarTable = document.getElementById("calendarTable");
+  const monthLabel = document.getElementById("monthLabel");
   const prevMonthBtn = document.getElementById("prevMonthBtn");
   const nextMonthBtn = document.getElementById("nextMonthBtn");
-  const historyList = document.getElementById("historyList");
-  const selectedDateTitle = document.getElementById("selectedDateTitle");
+  const historyDetail = document.getElementById("historyDetail");
 
-  const exportArea = document.getElementById("exportArea");
+  const exportBtn = document.getElementById("exportBtn");
+  const importBtn = document.getElementById("importBtn");
+  const exportWrap = document.getElementById("exportWrap");
   const exportText = document.getElementById("exportText");
 
-  const moodChartCanvas = document.getElementById("moodChart");
+  const moodChartCtx = document.getElementById("moodChart").getContext("2d");
 
-  // --------- 유틸 함수 ---------
-  function setStatus(msg, isError = false) {
-    statusEl.textContent = msg || "";
-    statusEl.classList.toggle("error", !!isError);
-  }
+  // ----- 상태 변수 -----
+  let currentUser = null;
+  let allEntries = []; // {id, dateString, dateTime, mood, note}
+  let selectedMood = null;
+  let currentMonthDate = new Date();
+  let chart = null;
 
-  function formatDateKorean(date) {
-    return `${date.getFullYear()}년 ${date.getMonth()+1}월 ${date.getDate()}일`;
-  }
-
-  function getToday() {
-    const now = new Date();
-    return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  // ----- 유틸 함수 -----
+  function formatDateDisplay(d) {
+    return `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일`;
   }
 
   function getTodayString() {
-    const t = getToday();
-    const y = t.getFullYear();
-    const m = String(t.getMonth() + 1).padStart(2,"0");
-    const d = String(t.getDate()).padStart(2,"0");
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, "0");
+    const d = String(now.getDate()).padStart(2, "0");
     return `${y}-${m}-${d}`;
   }
 
-  function getDateString(date) {
-    const y = date.getFullYear();
-    const m = String(date.getMonth()+1).padStart(2,"0");
-    const d = String(date.getDate()).padStart(2,"0");
-    return `${y}-${m}-${d}`;
+  function getDateStringFromDate(d) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
   }
 
-  function moodEmoji(mood) {
-    switch (mood) {
-      case "happy":   return "😊";
-      case "calm":    return "😌";
-      case "tired":   return "😪";
-      case "anxious": return "😟";
-      case "sad":     return "😢";
-      case "angry":   return "😡";
-      case "meh":     return "🙂";
-      default:        return "😐";
+  function setStatus(msg, isError = false) {
+    statusText.textContent = msg || "";
+    statusText.classList.toggle("error", !!isError);
+  }
+
+  function moodEmoji(m) {
+    const map = {
+      happy: "😊",
+      sad: "😢",
+      angry: "😡",
+      anxious: "😰",
+      tired: "🥱",
+      meh: "🙂"
+    };
+    return map[m] || "";
+  }
+
+  function moodScore(m) {
+    // 설명: 행복5, 그냥저냥3, 피곤/불안2, 슬픔/화남1
+    switch (m) {
+      case "happy":
+        return 5;
+      case "meh":
+        return 3;
+      case "tired":
+      case "anxious":
+        return 2;
+      case "sad":
+      case "angry":
+        return 1;
+      default:
+        return 3;
     }
   }
 
-  // 감정 점수 (그래프용) — 기준은 임의 설정 (추측입니다)
-  function moodScore(mood) {
-    switch (mood) {
-      case "happy":   return 3;
-      case "calm":    return 2;
-      case "meh":     return 1;
-      case "tired":   return 0;
-      case "anxious": return -1;
-      case "sad":     return -2;
-      case "angry":   return -3;
-      default:        return 0;
+  function resetMoodButtons() {
+    moodButtons.forEach(btn => btn.classList.remove("active"));
+  }
+
+  function renderTodayLine() {
+    const now = new Date();
+    todayText.textContent = "오늘: " + formatDateDisplay(now);
+  }
+
+  function renderTodayEntries() {
+    const todayStr = getTodayString();
+    const todayEntries = allEntries.filter(e => e.dateString === todayStr);
+
+    todayBox.innerHTML = "";
+    if (todayEntries.length === 0) {
+      const div = document.createElement("div");
+      div.className = "empty-text";
+      div.textContent = "아직 오늘 기록이 없어요.";
+      todayBox.appendChild(div);
+      return;
+    }
+
+    todayEntries.sort((a, b) => a.dateTime.localeCompare(b.dateTime));
+
+    for (const e of todayEntries) {
+      const wrapper = document.createElement("div");
+      wrapper.className = "today-item";
+
+      const timeDiv = document.createElement("div");
+      timeDiv.className = "today-time";
+      const hm = e.dateTime.slice(11, 16);
+      timeDiv.textContent = `${hm} · ${moodEmoji(e.mood)}`;
+
+      const textDiv = document.createElement("div");
+      textDiv.className = "today-text";
+      textDiv.textContent = e.note && e.note.trim().length > 0 ? e.note : "(메모 없음)";
+
+      wrapper.appendChild(timeDiv);
+      wrapper.appendChild(textDiv);
+      todayBox.appendChild(wrapper);
     }
   }
 
-  function escapeHtml(str) {
-    return str
-      .replace(/&/g,"&amp;")
-      .replace(/</g,"&lt;")
-      .replace(/>/g,"&gt;")
-      .replace(/"/g,"&quot;")
-      .replace(/'/g,"&#039;");
+  // ----- 달력 & 통계 -----
+  function renderCalendar() {
+    const y = currentMonthDate.getFullYear();
+    const m = currentMonthDate.getMonth(); // 0-based
+
+    monthLabel.textContent = `${y}년 ${m + 1}월`;
+
+    const firstDay = new Date(y, m, 1);
+    const startWeek = firstDay.getDay();
+    const lastDate = new Date(y, m + 1, 0).getDate();
+
+    const entriesByDate = {};
+    for (const e of allEntries) {
+      if (!e.dateString.startsWith(`${y}-${String(m + 1).padStart(2, "0")}-`)) continue;
+      if (!entriesByDate[e.dateString]) entriesByDate[e.dateString] = [];
+      entriesByDate[e.dateString].push(e);
+    }
+
+    calendarTable.innerHTML = "";
+
+    const thead = document.createElement("thead");
+    const headRow = document.createElement("tr");
+    ["일", "월", "화", "수", "목", "금", "토"].forEach(w => {
+      const th = document.createElement("th");
+      th.textContent = w;
+      headRow.appendChild(th);
+    });
+    thead.appendChild(headRow);
+    calendarTable.appendChild(thead);
+
+    const tbody = document.createElement("tbody");
+    let row = document.createElement("tr");
+
+    for (let i = 0; i < startWeek; i++) {
+      const td = document.createElement("td");
+      row.appendChild(td);
+    }
+
+    for (let d = 1; d <= lastDate; d++) {
+      const weekdayIndex = (startWeek + d - 1) % 7;
+      if (weekdayIndex === 0 && d !== 1) {
+        tbody.appendChild(row);
+        row = document.createElement("tr");
+      }
+
+      const td = document.createElement("td");
+      const inner = document.createElement("div");
+      inner.className = "cal-cell-inner";
+
+      const dateStr = `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+      const dayEntries = entriesByDate[dateStr] || [];
+
+      const numDiv = document.createElement("div");
+      numDiv.className = "day-number";
+      numDiv.textContent = d;
+
+      const emojiDiv = document.createElement("div");
+      emojiDiv.className = "day-emoji";
+
+      if (dayEntries.length > 0) {
+        const countByMood = {};
+        dayEntries.forEach(e => {
+          countByMood[e.mood] = (countByMood[e.mood] || 0) + 1;
+        });
+        const sorted = Object.entries(countByMood).sort((a, b) => b[1] - a[1]);
+        emojiDiv.textContent = moodEmoji(sorted[0][0]);
+      } else {
+        emojiDiv.textContent = "";
+      }
+
+      inner.appendChild(numDiv);
+      inner.appendChild(emojiDiv);
+      inner.addEventListener("click", () => showDayDetail(dateStr));
+      td.appendChild(inner);
+      row.appendChild(td);
+    }
+
+    tbody.appendChild(row);
+    calendarTable.appendChild(tbody);
+
+    renderChartForMonth();
   }
 
-  // --------- 화면 토글 ---------
-  function showLoginView() {
-    loginView.style.display = "block";
-    appView.style.display = "none";
+  function showDayDetail(dateStr) {
+    const entries = allEntries
+      .filter(e => e.dateString === dateStr)
+      .sort((a, b) => a.dateTime.localeCompare(b.dateTime));
+
+    historyDetail.innerHTML = "";
+
+    const title = document.createElement("div");
+    title.className = "history-date-line";
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) {
+      title.textContent = `${dateStr} · 기록`;
+    } else {
+      title.textContent = `${formatDateDisplay(d)} · 기록 ${entries.length}개`;
+    }
+    historyDetail.appendChild(title);
+
+    if (entries.length === 0) {
+      const empty = document.createElement("div");
+      empty.className = "empty-text";
+      empty.textContent = "이 날에는 기록이 없어요.";
+      historyDetail.appendChild(empty);
+      return;
+    }
+
+    for (const e of entries) {
+      const item = document.createElement("div");
+      item.className = "history-item";
+
+      const hm = e.dateTime.slice(11, 16);
+      item.innerHTML = `<strong>${hm}</strong> ${moodEmoji(e.mood)}<br>${e.note ? e.note : "(메모 없음)"}`;
+      historyDetail.appendChild(item);
+    }
   }
 
-  function showAppView() {
-    loginView.style.display = "none";
-    appView.style.display = "block";
+  function renderChartForMonth() {
+    const y = currentMonthDate.getFullYear();
+    const m = currentMonthDate.getMonth();
+
+    const numDays = new Date(y, m + 1, 0).getDate();
+    const labels = [];
+    const scores = [];
+
+    for (let d = 1; d <= numDays; d++) {
+      const dateStr = `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+      const entries = allEntries.filter(e => e.dateString === dateStr);
+      labels.push(d.toString());
+
+      if (entries.length === 0) {
+        scores.push(null); // 그래프에서 비우기
+      } else {
+        const avg =
+          entries.reduce((sum, e) => sum + moodScore(e.mood), 0) /
+          entries.length;
+        scores.push(Number(avg.toFixed(2)));
+      }
+    }
+
+    if (chart) {
+      chart.destroy();
+    }
+
+    chart = new Chart(moodChartCtx, {
+      type: "line",
+      data: {
+        labels,
+        datasets: [
+          {
+            label: "평균 감정 점수",
+            data: scores,
+            borderWidth: 2,
+            tension: 0.3,
+            spanGaps: false
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            display: false
+          }
+        },
+        scales: {
+          y: {
+            min: 0,
+            max: 5,
+            ticks: {
+              stepSize: 1
+            }
+          }
+        }
+      }
+    });
   }
 
-  // --------- Firebase Auth 이벤트 ---------
+  // ----- Firestore 연동 -----
+  async function loadAllEntriesForUser() {
+    if (!currentUser) {
+      allEntries = [];
+      renderTodayEntries();
+      renderCalendar();
+      return;
+    }
+
+    try {
+      const colRef = collection(db, "entries");
+      const q = query(
+        colRef,
+        where("userId", "==", currentUser.uid),
+        orderBy("dateTime", "asc")
+      );
+      const snap = await getDocs(q);
+      allEntries = snap.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      renderTodayEntries();
+      renderCalendar();
+    } catch (err) {
+      console.error(err);
+      setStatus("기록을 불러오는 중 오류가 발생했어요.", true);
+    }
+  }
+
+  async function addEntry(mood, note, dateTimeISO, dateString) {
+    if (!currentUser) {
+      setStatus("먼저 Google 로그인을 해 주세요.", true);
+      return;
+    }
+
+    try {
+      const colRef = collection(db, "entries");
+      const docRef = await addDoc(colRef, {
+        userId: currentUser.uid,
+        mood,
+        note,
+        dateTime: dateTimeISO,
+        dateString,
+        createdAt: new Date().toISOString() // 단순 ISO (serverTimestamp 대신)
+      });
+
+      allEntries.push({
+        id: docRef.id,
+        userId: currentUser.uid,
+        mood,
+        note,
+        dateTime: dateTimeISO,
+        dateString,
+        createdAt: new Date().toISOString()
+      });
+
+      renderTodayEntries();
+      renderCalendar();
+      setStatus("기록이 저장됐어요.");
+    } catch (err) {
+      console.error(err);
+      setStatus("기록 저장 중 오류가 발생했어요.", true);
+    }
+  }
+
+  // ----- 이벤트 바인딩 -----
+  // 메뉴 토글
+  menuToggle.addEventListener("click", () => {
+    menuPanel.classList.toggle("visible");
+  });
+
+  // 로그인 / 로그아웃
   loginBtn.addEventListener("click", async () => {
     try {
       await signInWithPopup(auth, provider);
+      // onAuthStateChanged에서 후속 처리
     } catch (err) {
       console.error(err);
       alert("로그인 중 오류가 발생했어요.");
@@ -708,84 +975,38 @@
   });
 
   onAuthStateChanged(auth, async (user) => {
-    currentUser = user;
-    if (!user) {
-      showLoginView();
-      setStatus("");
-      return;
+    currentUser = user || null;
+    if (currentUser) {
+      loginStatus.textContent = "로그인됨";
+      loginStatus.style.background = "#cceee1";
+      loginBtn.style.display = "none";
+      logoutBtn.style.display = "inline-flex";
+      userEmailEl.textContent = currentUser.email || "";
+    } else {
+      loginStatus.textContent = "로그인 필요";
+      loginStatus.style.background = "#d9efe6";
+      loginBtn.style.display = "inline-flex";
+      logoutBtn.style.display = "none";
+      userEmailEl.textContent = "";
     }
-
-    // 로그인된 상태
-    userEmailText.textContent = user.email || "";
-    showAppView();
-    initTodayUI();
     await loadAllEntriesForUser();
-    renderTodayEntries();
-    renderCalendar(currentMonthDate);
-    renderChartForMonth(currentMonthDate);
   });
 
-  // --------- 초기 UI 세팅 ---------
-  function initTodayUI() {
-    const today = getToday();
-    todayText.textContent = "오늘 · " + formatDateKorean(today);
-
-    const now = new Date();
-    timeInput.value =
-      String(now.getHours()).padStart(2,"0") + ":" +
-      String(now.getMinutes()).padStart(2,"0");
-
-    todayHint.textContent = "오늘 기록은 시간 순서대로 보여줘요.";
-  }
-
-  // 감정 버튼 활성화
-  moodButtonsContainer.addEventListener("click", (e) => {
-    const btn = e.target.closest(".mood-btn");
-    if (!btn) return;
-    selectedMood = btn.dataset.mood;
-    document.querySelectorAll(".mood-btn").forEach(b => {
-      b.classList.toggle("active", b === btn);
+  // 감정 버튼
+  moodButtons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      const mood = btn.dataset.mood;
+      selectedMood = mood;
+      resetMoodButtons();
+      btn.classList.add("active");
+      setStatus("");
     });
-    setStatus("");
   });
 
-  // 메뉴 토글
-  menuToggle.addEventListener("click", () => {
-    menuPanel.classList.toggle("visible");
-  });
-
-  // --------- Firestore I/O ---------
-  async function loadAllEntriesForUser() {
-    if (!currentUser) return;
-    const q = query(
-      collection(db, "entries"),
-      where("userId", "==", currentUser.uid),
-      orderBy("createdAt", "asc")
-    );
-    const snap = await getDocs(q);
-    monthEntriesCache = snap.docs.map(doc => {
-      const data = doc.data();
-      // createdAt이 Timestamp일 수도 있고 없을 수도 있어서 방어적으로 처리 (불확실함)
-      let dateObj = new Date();
-      if (data.dateTime) {
-        dateObj = new Date(data.dateTime);
-      } else if (data.createdAt && data.createdAt.toDate) {
-        dateObj = data.createdAt.toDate();
-      }
-      const dateStr = data.dateString || getDateString(dateObj);
-      return {
-        id: doc.id,
-        mood: data.mood || "meh",
-        note: data.note || "",
-        dateTime: dateObj,
-        dateString: dateStr
-      };
-    });
-  }
-
-  async function saveEntry() {
+  // 기록 추가
+  saveBtn.addEventListener("click", async () => {
     if (!currentUser) {
-      setStatus("로그인 상태를 확인해 주세요.", true);
+      setStatus("먼저 Google 로그인을 해 주세요.", true);
       return;
     }
     if (!selectedMood) {
@@ -793,289 +1014,69 @@
       return;
     }
 
+    const now = new Date();
+    const todayStr = getTodayString();
+
+    let dt = new Date(
+      `${todayStr}T${timeInput.value || "12:00"}:00`
+    );
+    if (isNaN(dt.getTime())) dt = now;
+
+    const iso = dt.toISOString();
     const note = noteInput.value.trim();
-    const timeVal = timeInput.value || "12:00";
-    const today = getToday();
-    const [hh, mm] = timeVal.split(":");
-    today.setHours(Number(hh || 12), Number(mm || 0), 0, 0);
 
-    setStatus("기록을 저장하는 중...");
-
-    try {
-      const docRef = await addDoc(collection(db, "entries"), {
-        userId: currentUser.uid,
-        mood: selectedMood,
-        note: note,
-        dateString: getTodayString(),
-        dateTime: today.toISOString(),
-        createdAt: serverTimestamp()
-      });
-
-      // 캐시에 추가
-      monthEntriesCache.push({
-        id: docRef.id,
-        mood: selectedMood,
-        note,
-        dateTime: today,
-        dateString: getTodayString()
-      });
-
-      // 입력창 초기화
-      noteInput.value = "";
-      // 파일은 아직 저장 기능이 없으니 선택 상태만 비움
-      photoInput.value = "";
-
-      renderTodayEntries();
-      renderCalendar(currentMonthDate);
-      renderChartForMonth(currentMonthDate);
-      setStatus("기록이 추가됐어요.");
-    } catch (err) {
-      console.error(err);
-      setStatus("기록 저장 중 오류가 발생했어요.", true);
-    }
-  }
-
-  saveBtn.addEventListener("click", () => {
-    saveEntry();
+    setStatus("기록을 저장 중입니다...");
+    await addEntry(selectedMood, note, iso, getDateStringFromDate(dt));
+    // 입력 유지(원하면 지워도 됨): 여기서는 메모만 비움
+    noteInput.value = "";
   });
 
-  // 오늘 기록 렌더링
-  function renderTodayEntries() {
-    const todayStr = getTodayString();
-    const entries = monthEntriesCache
-      .filter(e => e.dateString === todayStr)
-      .sort((a,b) => a.dateTime - b.dateTime);
-
-    if (entries.length === 0) {
-      todayList.innerHTML = '<div class="history-empty">아직 오늘 기록이 없어요.</div>';
-      return;
-    }
-
-    todayList.innerHTML = entries.map(e => {
-      const hm = `${String(e.dateTime.getHours()).padStart(2,"0")}:${String(e.dateTime.getMinutes()).padStart(2,"0")}`;
-      const text = e.note ? escapeHtml(e.note) : "(메모 없음)";
-      return `
-        <div class="today-item">
-          <div class="today-time">${hm} · ${moodEmoji(e.mood)}</div>
-          <div class="today-text">${text}</div>
-        </div>
-      `;
-    }).join("");
-  }
-
-  // --------- 달력 + 날짜별 상세 ---------
+  // 달력 토글
   toggleCalendarBtn.addEventListener("click", () => {
-    calendarSection.classList.toggle("visible");
-    if (calendarSection.classList.contains("visible")) {
-      renderCalendar(currentMonthDate);
-      renderChartForMonth(currentMonthDate);
-    }
+    calendarWrap.classList.toggle("visible");
   });
 
   prevMonthBtn.addEventListener("click", () => {
     currentMonthDate.setMonth(currentMonthDate.getMonth() - 1);
-    renderCalendar(currentMonthDate);
-    renderChartForMonth(currentMonthDate);
+    renderCalendar();
   });
 
   nextMonthBtn.addEventListener("click", () => {
     currentMonthDate.setMonth(currentMonthDate.getMonth() + 1);
-    renderCalendar(currentMonthDate);
-    renderChartForMonth(currentMonthDate);
+    renderCalendar();
   });
 
-  function renderCalendar(baseDate) {
-    const y = baseDate.getFullYear();
-    const m = baseDate.getMonth(); // 0-based
-    monthLabel.textContent = `${y}년 ${m+1}월`;
-
-    const firstDay = new Date(y, m, 1);
-    const startWeek = firstDay.getDay();
-    const lastDate = new Date(y, m+1, 0).getDate();
-
-    // 해당 월에 속한 기록만
-    const monthEntries = monthEntriesCache.filter(e => {
-      return e.dateTime.getFullYear() === y && e.dateTime.getMonth() === m;
-    });
-
-    calendarTable.innerHTML = "";
-    let thead = "<thead><tr>";
-    ["일","월","화","수","목","금","토"].forEach(w => {
-      thead += `<th>${w}</th>`;
-    });
-    thead += "</tr></thead>";
-    calendarTable.insertAdjacentHTML("beforeend", thead);
-
-    let tbody = "<tbody><tr>";
-    for (let i=0; i<startWeek; i++) {
-      tbody += "<td></td>";
-    }
-
-    for (let d=1; d<=lastDate; d++) {
-      if ((startWeek + d - 1) % 7 === 0 && d !== 1) {
-        tbody += "</tr><tr>";
-      }
-      const dateObj = new Date(y, m, d);
-      const ds = getDateString(dateObj);
-
-      const dayEntries = monthEntries.filter(e => e.dateString === ds);
-      let repEmoji = "";
-      if (dayEntries.length > 0) {
-        // 가장 자주 기록된 감정을 대표 감정으로 사용
-        const counter = {};
-        dayEntries.forEach(e => {
-          counter[e.mood] = (counter[e.mood] || 0) + 1;
-        });
-        const sorted = Object.entries(counter).sort((a,b) => b[1]-a[1]);
-        repEmoji = moodEmoji(sorted[0][0]);
-      }
-
-      tbody += `
-        <td>
-          <div class="cal-cell" data-date="${ds}">
-            <div class="cal-day">${d}</div>
-            <div class="cal-emoji">${repEmoji}</div>
-          </div>
-        </td>
-      `;
-    }
-
-    tbody += "</tr></tbody>";
-    calendarTable.insertAdjacentHTML("beforeend", tbody);
-
-    // 클릭 이벤트
-    calendarTable.querySelectorAll(".cal-cell").forEach(cell => {
-      cell.addEventListener("click", () => {
-        const ds = cell.dataset.date;
-        showDayDetails(ds);
-      });
-    });
-
-    // 기본 선택: 오늘이 해당 월에 있으면 오늘, 아니면 1일
-    const today = getToday();
-    if (today.getFullYear() === y && today.getMonth() === m) {
-      showDayDetails(getTodayString());
-    } else {
-      showDayDetails(getDateString(new Date(y,m,1)));
-    }
-  }
-
-  function showDayDetails(dateString) {
-    const dateParts = dateString.split("-");
-    if (dateParts.length !== 3) return;
-
-    const dateObj = new Date(
-      Number(dateParts[0]),
-      Number(dateParts[1]) - 1,
-      Number(dateParts[2])
-    );
-    selectedDateTitle.textContent = formatDateKorean(dateObj) + " · 기록";
-
-    const dayEntries = monthEntriesCache
-      .filter(e => e.dateString === dateString)
-      .sort((a,b) => a.dateTime - b.dateTime);
-
-    if (dayEntries.length === 0) {
-      historyList.innerHTML = '<div class="history-empty">이 날에는 기록이 없어요.</div>';
-      return;
-    }
-
-    historyList.innerHTML = dayEntries.map(e => {
-      const hm = `${String(e.dateTime.getHours()).padStart(2,"0")}:${String(e.dateTime.getMinutes()).padStart(2,"0")}`;
-      const text = e.note ? escapeHtml(e.note) : "(메모 없음)";
-      return `
-        <div class="history-item">
-          <div class="today-time">${hm} · ${moodEmoji(e.mood)}</div>
-          <div class="today-text">${text}</div>
-        </div>
-      `;
-    }).join("");
-  }
-
-  // --------- 감정 통계 그래프 ---------
-  function renderChartForMonth(baseDate) {
-    const y = baseDate.getFullYear();
-    const m = baseDate.getMonth();
-    const lastDate = new Date(y, m+1, 0).getDate();
-
-    const dailyScores = new Array(lastDate).fill(null); // null은 기록 없음
-
-    const monthEntries = monthEntriesCache.filter(e => {
-      return e.dateTime.getFullYear() === y && e.dateTime.getMonth() === m;
-    });
-
-    for (let d=1; d<=lastDate; d++) {
-      const ds = getDateString(new Date(y,m,d));
-      const dayEntries = monthEntries.filter(e => e.dateString === ds);
-      if (dayEntries.length === 0) continue;
-      const avg =
-        dayEntries.reduce((sum, e) => sum + moodScore(e.mood), 0) /
-        dayEntries.length;
-      dailyScores[d-1] = Number(avg.toFixed(2));
-    }
-
-    const labels = Array.from({length:lastDate}, (_,i)=> String(i+1));
-
-    if (moodChart) {
-      moodChart.destroy();
-    }
-
-    moodChart = new Chart(moodChartCanvas, {
-      type: "line",
-      data: {
-        labels,
-        datasets: [{
-          label: "감정 점수",
-          data: dailyScores,
-          spanGaps: true,
-          tension: 0.3
-        }]
-      },
-      options: {
-        responsive: true,
-        scales: {
-          y: {
-            suggestedMin: -3,
-            suggestedMax: 3,
-            ticks: {
-              stepSize: 1
-            }
-          }
-        },
-        plugins: {
-          legend: {
-            display: false
-          }
-        }
-      }
-    });
-  }
-
-  // --------- 데이터 내보내기 / 불러오기 ---------
+  // 데이터 내보내기
   exportBtn.addEventListener("click", () => {
     if (!currentUser) {
-      alert("로그인 상태를 확인해 주세요.");
+      alert("먼저 Google 로그인을 해 주세요.");
       return;
     }
-    const plain = monthEntriesCache
-      .sort((a,b) => a.dateTime - b.dateTime)
-      .map(e => ({
-        dateTime: e.dateTime.toISOString(),
+    if (!allEntries || allEntries.length === 0) {
+      exportText.value = "// 아직 저장된 기록이 없습니다.";
+    } else {
+      const compact = allEntries.map(e => ({
+        dateTime: e.dateTime,
         dateString: e.dateString,
         mood: e.mood,
-        note: e.note
+        note: e.note || ""
       }));
-    exportText.value = JSON.stringify(plain, null, 2);
-    exportArea.classList.add("visible");
-    setStatus("데이터를 JSON 형식으로 만들었어요.");
+      exportText.value = JSON.stringify(compact, null, 2);
+    }
+    exportWrap.classList.add("visible");
+    setStatus("데이터를 내보냈어요. 아래 내용을 복사해서 보관할 수 있어요.");
   });
 
+  // 데이터 불러오기
   importBtn.addEventListener("click", async () => {
     if (!currentUser) {
-      alert("로그인 상태를 확인해 주세요.");
+      alert("먼저 Google 로그인을 해 주세요.");
       return;
     }
-    const input = prompt("내보냈던 JSON 내용을 그대로 붙여 넣어 주세요.\n(주의: 같은 기록이 여러 번 들어갈 수 있어요.)");
+    const input = prompt(
+      "내보냈던 JSON 내용을 그대로 붙여 넣어 주세요.\n" +
+      "※ 이 버전에서는 '이 사이트의 내보내기 버튼'으로 만든 JSON만 확실하게 지원합니다."
+    );
     if (!input) return;
 
     let arr;
@@ -1083,46 +1084,65 @@
       arr = JSON.parse(input);
       if (!Array.isArray(arr)) throw new Error("array 아님");
     } catch (err) {
-      alert("JSON 형식이 올바르지 않아요.");
+      console.error(err);
+      alert("JSON 형식이 올바르지 않아요. 대괄호 [ ] 로 시작하는지 확인해 주세요.");
       return;
     }
 
-    setStatus("데이터를 불러오는 중...");
+    if (arr.length === 0) {
+      setStatus("불러올 데이터가 0개예요. (배열이 비어 있어요.)", true);
+      return;
+    }
+
+    setStatus(`데이터 ${arr.length}개를 불러오는 중입니다...`);
 
     try {
-      const colRef = collection(db, "entries");
-      const tasks = arr.map(e => {
+      let successCount = 0;
+      for (const e of arr) {
         let dt;
         try {
-          dt = e.dateTime ? new Date(e.dateTime) : new Date();
+          if (e.dateTime) {
+            dt = new Date(e.dateTime);
+          } else {
+            dt = new Date();
+          }
         } catch {
           dt = new Date();
         }
-        const ds = e.dateString || getDateString(dt);
-        return addDoc(colRef, {
-          userId: currentUser.uid,
-          mood: e.mood || "meh",
-          note: e.note || "",
-          dateString: ds,
-          dateTime: dt.toISOString(),
-          createdAt: serverTimestamp()
-        });
-      });
+        if (isNaN(dt.getTime())) dt = new Date();
 
-      await Promise.all(tasks);
+        const ds = e.dateString || getDateStringFromDate(dt);
+
+        await addEntry(
+          e.mood || "meh",
+          e.note || "",
+          dt.toISOString(),
+          ds
+        );
+        successCount += 1;
+      }
       await loadAllEntriesForUser();
-      renderTodayEntries();
-      renderCalendar(currentMonthDate);
-      renderChartForMonth(currentMonthDate);
-      setStatus("기록 불러오기가 완료됐어요.");
+      setStatus(`기록 불러오기가 완료됐어요. (총 ${successCount}개 추가됨)`);
+      alert(`불러오기 완료: ${successCount}개 기록이 추가됐어요.`);
     } catch (err) {
       console.error(err);
       setStatus("기록 불러오기 중 오류가 발생했어요.", true);
     }
   });
 
-  // --------- 페이지 최초 진입 시 ---------
-  // (onAuthStateChanged에서 나머지 흐름을 처리)
+  // ----- 초기 세팅 -----
+  (function init() {
+    // 오늘 날짜 문구
+    renderTodayLine();
+
+    // timeInput 기본값: 현재 시각 (분 단위)
+    const now = new Date();
+    const hh = String(now.getHours()).padStart(2, "0");
+    const mm = String(now.getMinutes()).padStart(2, "0");
+    timeInput.value = `${hh}:${mm}`;
+
+    // 로그인 상태 감시(onAuthStateChanged)에서 나머지 로딩을 처리함
+  })();
 </script>
 </body>
 </html>
